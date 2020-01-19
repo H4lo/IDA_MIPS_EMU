@@ -111,7 +111,7 @@ int main(){
 .text:00400678  # End of function calc
 ```
 
-- IDA emu
+#### IDA emu
 
 - before run the script, two space must be modified, the second parameter of the GetManyBytes function in line 32, which must be changed to the size of the code segment, the result value of getModeFromIDA function must be replaces big or little endian.
 
