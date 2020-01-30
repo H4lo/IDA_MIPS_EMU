@@ -1,4 +1,5 @@
 # coding: utf-8
+# __Author__: H4lo
 from __future__ import print_function
 from unicorn import *
 from unicorn.mips_const import *
@@ -26,10 +27,21 @@ class EmuMips(object):
         self.DEBUG_INFO = ""
         self.startAddr = None
         self.endAddr = None
+        print("[+] Init...")
+
+    def getTextSegmentSize(self):
+        '''
+        for seg in idautils.Segments():
+            if idc.SegName(seg) == ".text":
+                return(idc.SegEnd(seg)-get_imagebase())
+        '''
+        mapSize = (get_inf_structure().get_maxEA() - get_inf_structure().get_minEA())
+        return mapSize
+
 
     def initCodeAndData(self):
         CODE_ADDR = get_imagebase()                                 # set CODE_ADDR equal with image base
-        code_bytes = GetManyBytes(CODE_ADDR,0x10000)                # default mapping 0x10000 space 
+        code_bytes = GetManyBytes(CODE_ADDR,self.getTextSegmentSize())                # default mapping 0x10000 space 
         self.uc.mem_map(CODE_ADDR,CODE_SIZE)
         self.uc.mem_write(CODE_ADDR,code_bytes)
 
@@ -108,12 +120,15 @@ class EmuMips(object):
         self.DEBUG_INFO += ">>> Tracing instruction at 0x%x, instruction size = 0x%x\n" %(address, size)
         #print("AAAA")
 
-    def getArchFromIDA(self):                           # get arch and endian information from IDA, api temp unknown
+    def getArchFromIDA(self):                           # get arch and endian information from IDA, api: idaapi.get_inf_structure()
         return UC_ARCH_MIPS
 
     def getModeFromIDA(self):
-        return UC_MODE_MIPS32 + UC_MODE_BIG_ENDIAN
-        #return UC_MODE_MIPS32 + UC_MODE_LITTLE_ENDIAN
+        #return UC_MODE_MIPS32 + UC_MODE_BIG_ENDIAN
+        if get_inf_structure().is_be():                 # executable file is big endian
+            return UC_MODE_MIPS32 + UC_MODE_BIG_ENDIAN
+        else:
+            return UC_MODE_MIPS32 + UC_MODE_LITTLE_ENDIAN
 
     def parseParams(self,args):
         try:
@@ -166,5 +181,20 @@ class EmuMips(object):
     def fuzzFunc(self,data):
         print(1)
 
+banner = '''
+$$$$$$\$$$$$$$\  $$$$$$\       $$\      $$\$$$$$$\$$$$$$$\  $$$$$$\      $$$$$$$$\$$\      $$\$$\   $$\ 
+\_$$  _$$  __$$\$$  __$$\      $$$\    $$$ \_$$  _$$  __$$\$$  __$$\     $$  _____$$$\    $$$ $$ |  $$ |
+  $$ | $$ |  $$ $$ /  $$ |     $$$$\  $$$$ | $$ | $$ |  $$ $$ /  \__|    $$ |     $$$$\  $$$$ $$ |  $$ |
+  $$ | $$ |  $$ $$$$$$$$ |     $$\$$\$$ $$ | $$ | $$$$$$$  \$$$$$$\      $$$$$\   $$\$$\$$ $$ $$ |  $$ |
+  $$ | $$ |  $$ $$  __$$ |     $$ \$$$  $$ | $$ | $$  ____/ \____$$\     $$  __|  $$ \$$$  $$ $$ |  $$ |
+  $$ | $$ |  $$ $$ |  $$ |     $$ |\$  /$$ | $$ | $$ |     $$\   $$ |    $$ |     $$ |\$  /$$ $$ |  $$ |
+$$$$$$\$$$$$$$  $$ |  $$ |     $$ | \_/ $$ $$$$$$\$$ |     \$$$$$$  |    $$$$$$$$\$$ | \_/ $$ \$$$$$$  |
+\______\_______/\__|  \__$$$$$$\__|     \__\______\__|      \______$$$$$$\________\__|     \__|\______/ 
+                         \______|                                  \______|                                                                                                                             
+
+'''
+print("="*0x68)
+print(banner)
+print("="*0x68)
 #a = EmuMips()
 #a.configEmu(0x1000,0x2000)
